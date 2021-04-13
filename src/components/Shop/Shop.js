@@ -1,27 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import './Shop.css';
-import fakeData from '../../fakeData';
 import Product from '../Product/Product';
 import Cart from '../Cart/Cart';
 import { addToDatabaseCart, getDatabaseCart } from '../../utilities/databaseManager';
 import { Link } from 'react-router-dom';
 
 const Shop = () => {
-    const first10 = fakeData.slice(0, 10);
-    const [products, setProducts] = useState(first10);
-
+    const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
+
+    useEffect( () => {
+        fetch("https://boiling-refuge-25034.herokuapp.com/products")
+        .then(res => res.json())
+        .then(data => setProducts(data))
+    }, [])
 
     useEffect( () => {
         const savedCart = getDatabaseCart();
         const productKeys = Object.keys(savedCart);
-
-        const cartProducts = productKeys.map( key => {
-            const product = fakeData.find( pd => pd.key === key);
-            product.quantity = savedCart[key];
-            return product;
+        fetch("https://boiling-refuge-25034.herokuapp.com/productsByKeys", {
+            method: "POST",
+            headers: {
+                'Content-type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify(productKeys)
         })
-        setCart(cartProducts);
+        .then(res => res.json())
+        .then(data => setCart(data))
+        
     }, [])
     
     const handleAddProduct = (item) => {
